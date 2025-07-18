@@ -19,4 +19,14 @@ export default defineNuxtConfig({
     "@nuxt/test-utils",
     "@nuxt/ui",
   ],
+  runtimeConfig: {
+    androidSmsGatewayUrl: process.env.NUXT_ANDROID_SMS_GATEWAY_URL,
+    androidSmsGatewayLogin: process.env.NUXT_ANDROID_SMS_GATEWAY_LOGIN,
+    androidSmsGatewayPassword: process.env.NUXT_ANDROID_SMS_GATEWAY_PASSWORD,
+    myPhoneNumber: process.env.NUXT_MY_PHONE_NUMBER,
+    superSecretSalt: process.env.NUXT_SUPER_SECRET_SALT,
+
+    // Keys within public, will be also exposed to the client-side
+    public: {},
+  },
 });

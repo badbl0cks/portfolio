@@ -121,52 +121,7 @@
     <section id="contact" class="py-20 bg-base-100">
       <div class="container mx-auto px-4">
         <h2 class="text-4xl font-bold text-center mb-12">Get In Touch</h2>
-        <div class="max-w-xl mx-auto">
-          <form>
-            <div class="form-control mb-4">
-              <input
-                type="text"
-                placeholder="Your Name"
-                aria-label="Your Name"
-                class="input input-bordered w-full"
-              />
-            </div>
-            <div class="flex flex-col md:flex-row gap-4 mb-4">
-              <div class="form-control w-full md:w-1/2">
-                <div class="join w-full">
-                  <input
-                    type="tel"
-                    placeholder="Your Phone Number"
-                    aria-label="Your Phone Number"
-                    class="input input-bordered w-full"
-                  />
-                  <button class="btn btn-secondary join-item">Send Code</button>
-                </div>
-              </div>
-              <div class="form-control w-full md:w-1/2">
-                <div class="join w-full">
-                  <input
-                    type="text"
-                    placeholder="Verification Code"
-                    aria-label="Verification Code"
-                    class="input input-bordered join-item w-full"
-                  />
-                  <button class="btn btn-secondary join-item">Verify</button>
-                </div>
-              </div>
-            </div>
-            <div class="form-control mb-4">
-              <textarea
-                class="textarea textarea-bordered h-32 w-full"
-                placeholder="Your message..."
-                aria-label="Your message..."
-              ></textarea>
-            </div>
-            <div class="text-center">
-              <button class="btn btn-primary w-full">Text Me!</button>
-            </div>
-          </form>
-        </div>
+        <ContactForm />
       </div>
     </section>
   </div>
@@ -181,13 +136,12 @@ onMounted(() => {
   const typedOptions = {
     strings: [
       "an aspiring Software Engineer.",
-      "a Web Developer.",
-      "a Backend Magician.",
+      "a self-taught Web Developer with experience.",
+      "a Full-Stack Magician.",
       "a UI/UX Problem Solver.",
-      "an Accessibility Advocate.",
+      "a Web Accessibility Advocate.",
       "an Open Source Contributor.",
-      "a Collaborative Teammate.",
-      "a Creative Coder.",
+      "a Collaborative Team Player.",
     ],
     typeSpeed: 60,
     backSpeed: 40,
@@ -208,7 +162,7 @@ onMounted(() => {
 
   $sr.reveal("#projects .card", { interval: 100 });
 
-  $sr.reveal("#contact form", { delay: 300 });
+  $sr.reveal("#contact .max-w-xl", { delay: 300 });
 });
 </script>
 
