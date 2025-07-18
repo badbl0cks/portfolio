@@ -31,14 +31,14 @@
           </div>
           <div class="md:w-2/3">
             <p class="text-lg mb-4">
-              Hello! I'm a passionate and creative junior web developer with a
-              knack for building beautiful and functional websites. I love
-              learning new technologies and I'm always looking for exciting
-              projects to work on.
+              Hiya! I'm a passionate and creative web developer with a knack for
+              building beautiful and functional websites. I love learning new
+              technologies and I'm always looking for exciting projects to work
+              on.
             </p>
             <h3 class="text-2xl font-bold mb-4">My Skills</h3>
             <div class="flex flex-wrap gap-4">
-              <div class="badge badge-primary badge-lg">HTML</div>
+              <div class="badge badge-primary badge-lg">HTML5</div>
               <div class="badge badge-primary badge-lg">CSS</div>
               <div class="badge badge-primary badge-lg">JavaScript</div>
               <div class="badge badge-primary badge-lg">Git</div>
@@ -51,68 +51,35 @@
         </div>
       </div>
     </section>
-
-    <!-- Projects Section -->
+    <!-- Current Projects Section -->
     <section id="projects" class="py-20 bg-base-200">
       <div class="container mx-auto px-4">
-        <h2 class="text-4xl font-bold text-center mb-12">My Projects</h2>
+        <h2 class="text-4xl font-bold text-center mb-12">Current Projects</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <!-- Project Card 1 -->
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h2 class="card-title">Project One</h2>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              </p>
-              <div class="card-actions justify-end">
-                <button class="btn btn-primary">Live Demo</button>
-                <button class="btn btn-secondary">Source Code</button>
-              </div>
-            </div>
-          </div>
-          <!-- Project Card 2 -->
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h2 class="card-title">Project Two</h2>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              </p>
-              <div class="card-actions justify-end">
-                <button class="btn btn-primary">Live Demo</button>
-                <button class="btn btn-secondary">Source Code</button>
-              </div>
-            </div>
-          </div>
-          <!-- Project Card 3 -->
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h2 class="card-title">Project Three</h2>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              </p>
-              <div class="card-actions justify-end">
-                <button class="btn btn-primary">Live Demo</button>
-                <button class="btn btn-secondary">Source Code</button>
-              </div>
-            </div>
-          </div>
-          <!-- Project Card 4 -->
-          <div class="card bg-base-100 shadow-xl">
-            <div class="card-body">
-              <h2 class="card-title">Project Four</h2>
-              <p>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua.
-              </p>
-              <div class="card-actions justify-end">
-                <button class="btn btn-primary">Live Demo</button>
-                <button class="btn btn-secondary">Source Code</button>
-              </div>
-            </div>
-          </div>
+          <ProjectCard
+            title="PKMNTradeClub"
+            description="A web app to facilitate trading between players of Pokémon TCG Pocket, which frustratingly lacks trade matching features. Currently in development!"
+          />
+        </div>
+      </div>
+    </section>
+    <!-- Inactive Projects Section -->
+    <section id="projects" class="py-20 bg-base-200">
+      <div class="container mx-auto px-4">
+        <h2 class="text-4xl font-bold text-center mb-12">Inactive Projects</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <ProjectCard
+            title="PokeEmerald Mods"
+            description="Various mods for one of my favorite games, Pokémon Emerald, to streamline my replays with custom QoL features."
+          />
+          <ProjectCard
+            title="EditMii"
+            description="A Python script that allows users to view their WiiU Mii character's data and optionally change the Mii's name. Created in order to easily set flashy, custom names for online play."
+          />
+          <ProjectCard
+            title="BOTW Completer"
+            description="A Nintendo Switch application that helps users find missing items and locations in Breath of the Wild by modifying the save file to add stamps to the in-game map."
+          />
         </div>
       </div>
     </section>

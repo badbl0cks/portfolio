@@ -127,7 +127,7 @@
           :disabled="!isVerified || isSendingMessage || isMessageSent"
         >
           <span v-if="isSendingMessage" class="loading loading-spinner"></span>
-          Text Me!
+          Text Me! (Rob ☺️)
         </button>
       </div>
     </form>
