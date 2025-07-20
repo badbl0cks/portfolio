@@ -28,8 +28,6 @@ export function createSmsGatewayClient(config) {
     console.error(
       "SMS Gateway service is not configured. Missing required environment variables for the gateway.",
     );
-    // This indicates a critical server misconfiguration. The calling API endpoint
-    // should handle this and return a generic 500 error to the client.
     throw new Error("Server is not configured for sending SMS.");
   }
 

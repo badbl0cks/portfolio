@@ -1,4 +1,3 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-05-15",
   devtools: {
@@ -26,7 +25,6 @@ export default defineNuxtConfig({
     myPhoneNumber: process.env.NUXT_MY_PHONE_NUMBER,
     superSecretSalt: process.env.NUXT_SUPER_SECRET_SALT,
 
-    // Keys within public, will be also exposed to the client-side
     public: {},
   },
 });

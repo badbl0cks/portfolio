@@ -10,6 +10,8 @@ export default defineEventHandler(async (event) => {
     message: userMessage,
     phoneNumber: rawPhoneNumber,
     code,
+    interactionData,
+    website,
   } = await readBody(event);
 
   let phoneNumber;
@@ -19,7 +21,32 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: error.message });
   }
 
-  // --- Input Validation ---
+  if (website) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Spam detected.",
+    });
+  }
+
+  if (interactionData) {
+    if (interactionData.timeSpent < 3000) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Submission too fast.",
+      });
+    }
+
+    if (
+      interactionData.mouseActivity === 0 &&
+      interactionData.keyboardActivity === 0
+    ) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "No user interaction detected.",
+      });
+    }
+  }
+
   if (!name || !userMessage || !code) {
     throw createError({
       statusCode: 400,
@@ -27,12 +54,19 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Prevent abuse by checking rate limit before doing anything
+  const nameRegex = /^[a-zA-Z\s'-]{2,50}$/;
+  if (!nameRegex.test(name.trim())) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Name contains invalid characters or format.",
+    });
+  }
+
   if (isRateLimited(phoneNumber)) {
     throw createError({
       statusCode: 429,
       statusMessage:
-        "You have already sent a message within the last week. Please try again later.",
+        "You have reached the maximum of 3 messages per week. Please try again later.",
     });
   }
 
@@ -51,7 +85,50 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // --- Server Configuration Check ---
+  if (userMessage.trim().length < 10) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Message is too short.",
+    });
+  }
+
+  const spamKeywords = [
+    "viagra",
+    "casino",
+    "lottery",
+    "winner",
+    "click here",
+    "free money",
+    "urgent",
+    "limited time",
+  ];
+  const hasSpamKeywords = spamKeywords.some((keyword) =>
+    userMessage.toLowerCase().includes(keyword.toLowerCase()),
+  );
+
+  if (hasSpamKeywords) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Message contains inappropriate content.",
+    });
+  }
+
+  if (/([a-zA-Z])\1{4,}/.test(userMessage)) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Message contains excessive repeated characters.",
+    });
+  }
+
+  const uppercaseRatio =
+    (userMessage.match(/[A-Z]/g) || []).length / userMessage.length;
+  if (uppercaseRatio > 0.7 && userMessage.length > 10) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: "Message contains excessive uppercase text.",
+    });
+  }
+
   if (!config.myPhoneNumber || !config.superSecretSalt) {
     console.error(
       "Server is not fully configured. MY_PHONE_NUMBER and SUPER_SECRET_SALT are required.",
@@ -62,7 +139,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // --- Verification ---
   const isVerified = verifyTOTP(phoneNumber, config.superSecretSalt, code);
   if (!isVerified) {
     throw createError({
@@ -72,7 +148,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // --- Send Message ---
   try {
     const api = createSmsGatewayClient(config);
     const finalMessage = `New message from ${name} ( ${phoneNumber} ) via your portfolio:\n\n"${userMessage}"`;
@@ -83,7 +158,6 @@ export default defineEventHandler(async (event) => {
 
     const state = await api.send(message);
 
-    // On success, record the submission time to start the rate-limiting period.
     recordSubmission(phoneNumber);
 
     return { success: true, messageId: state.id };

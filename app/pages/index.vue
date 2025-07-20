@@ -1,19 +1,18 @@
 <template>
   <div>
-    <!-- Hero Section -->
-    <section class="hero min-h-screen bg-base-200">
-      <div class="hero-content text-center">
+    <section class="hero min-h-screen bg-base-200 relative overflow-hidden">
+      <div class="absolute inset-0 z-0 animated-background"></div>
+      <div class="hero-content text-center relative z-10">
         <div class="max-w-md">
           <h1 class="text-5xl font-bold">
             Hi, I'm <span class="text-primary">Rob</span>!
           </h1>
-          <p class="py-6 text-2xl">I'm <span id="typed-text"></span></p>
+          <p class="py-6 text-2xl">I'm <span id="typed-text" /></p>
           <button class="btn btn-primary">View My Work</button>
         </div>
       </div>
     </section>
 
-    <!-- About Me Section -->
     <section id="about" class="py-20 bg-base-100">
       <div class="container mx-auto px-4">
         <h2 class="text-4xl font-bold text-center mb-12">About Me</h2>
@@ -51,7 +50,6 @@
         </div>
       </div>
     </section>
-    <!-- Current Projects Section -->
     <section id="projects" class="py-20 bg-base-200">
       <div class="container mx-auto px-4">
         <h2 class="text-4xl font-bold text-center mb-12">Current Projects</h2>
@@ -60,13 +58,16 @@
             title="PKMNTradeClub"
             description="A web app to facilitate trading between players of Pokémon TCG Pocket, which frustratingly lacks trade matching features. Currently in development!"
           />
+          <ProjectCard
+            title="Home Lab & Self-Hosted Solutions"
+            description="A collection of hardware, projects, and experiments to learn and explore new technologies and concepts, as well as augment and enhance my personal tech space."
+          />
         </div>
       </div>
     </section>
-    <!-- Inactive Projects Section -->
     <section id="projects" class="py-20 bg-base-200">
       <div class="container mx-auto px-4">
-        <h2 class="text-4xl font-bold text-center mb-12">Inactive Projects</h2>
+        <h2 class="text-4xl font-bold text-center mb-12">Past Projects</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <ProjectCard
             title="PokeEmerald Mods"
@@ -84,7 +85,6 @@
       </div>
     </section>
 
-    <!-- Contact Section -->
     <section id="contact" class="py-20 bg-base-100">
       <div class="container mx-auto px-4">
         <h2 class="text-4xl font-bold text-center mb-12">Get In Touch</h2>
@@ -134,8 +134,18 @@ onMounted(() => {
 </script>
 
 <style>
-/* Ensuring the hero section takes the full viewport height */
 .min-h-screen {
   min-height: 100vh;
+}
+
+.hero .hero-content {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.animated-background {
+  background-image: url("/NZclouds.webp"), url("/NZclouds-static.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 </style>

@@ -1,6 +1,10 @@
 import { generateTOTP } from "../utils/totp";
 import { createSmsGatewayClient } from "../lib/sms-gateway";
-import { isRateLimited } from "../utils/rate-limiter.js";
+import {
+  isRateLimited,
+  isOtpRateLimited,
+  recordOtpRequest,
+} from "../utils/rate-limiter.js";
 import { normalizeAndValidatePhoneNumber } from "../utils/phone-validator.js";
 
 export default defineEventHandler(async (event) => {
@@ -11,16 +15,22 @@ export default defineEventHandler(async (event) => {
   try {
     normalizedPhoneNumber = normalizeAndValidatePhoneNumber(rawPhoneNumber);
   } catch (error) {
-    // The validator throws an error with a user-friendly message.
     throw createError({ statusCode: 400, statusMessage: error.message });
   }
 
-  // Prevent abuse by checking rate limit before sending an SMS
+  if (isOtpRateLimited(normalizedPhoneNumber)) {
+    throw createError({
+      statusCode: 429,
+      statusMessage:
+        "You have reached the maximum of 3 verification code requests per hour. Please try again later.",
+    });
+  }
+
   if (isRateLimited(normalizedPhoneNumber)) {
     throw createError({
       statusCode: 429,
       statusMessage:
-        "You have already sent a message within the last week. Please try again later.",
+        "You have reached the maximum of 3 messages per week. Please try again later.",
     });
   }
 
@@ -44,6 +54,9 @@ export default defineEventHandler(async (event) => {
     };
 
     const state = await api.send(message);
+
+    recordOtpRequest(normalizedPhoneNumber);
+
     return { success: true, messageId: state.id };
   } catch (error) {
     console.error("Failed to send OTP:", error);

@@ -2,11 +2,9 @@
   <UApp>
     <div data-theme="night">
       <main>
-        <!-- The content of the current page will be rendered here -->
         <NuxtPage />
       </main>
 
-      <!-- Footer -->
       <footer class="footer p-10 bg-base-300 text-base-content">
         <div>
           <span class="footer-title">Social</span>
@@ -60,10 +58,6 @@
   </UApp>
 </template>
 
-<script setup>
-/* Global */
-</script>
+<script setup></script>
 
-<style>
-/* Global */
-</style>
+<style></style>

@@ -10,7 +10,6 @@ export default defineEventHandler(async (event) => {
   try {
     normalizedPhoneNumber = normalizeAndValidatePhoneNumber(rawPhoneNumber);
   } catch (error) {
-    // The validator throws an error with a user-friendly message.
     throw createError({ statusCode: 400, statusMessage: error.message });
   }
 
@@ -21,7 +20,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Prevent abuse by checking rate limit before doing anything
   if (isRateLimited(normalizedPhoneNumber)) {
     throw createError({
       statusCode: 429,
@@ -30,10 +28,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Check for necessary server configuration.
   if (!config.superSecretSalt) {
     console.error("SUPER_SECRET_SALT is not configured on the server.");
-    // This is an internal server error, so we don't expose details to the client.
     throw createError({
       statusCode: 500,
       statusMessage: "A server configuration error occurred.",
@@ -47,10 +43,8 @@ export default defineEventHandler(async (event) => {
   );
 
   if (isValid) {
-    // In a stateful app, one might set a session cookie here.
     return { success: true };
   } else {
-    // The code is incorrect or has expired.
     throw createError({
       statusCode: 401, // Unauthorized
       statusMessage: "Invalid or expired verification code.",

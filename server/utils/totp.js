@@ -1,10 +1,9 @@
 import { authenticator } from "otplib";
 import { createHash } from "crypto";
 
-// These settings must be consistent between generation and verification.
 authenticator.options = {
-  step: 60, // OTP is valid for 1 minute per window
-  window: [5, 1], // Allow tokens from 5 previous and 1 future time-steps.
+  step: 60,
+  window: [5, 1],
   digits: 6,
 };
 
@@ -46,8 +45,6 @@ export function generateTOTP(phoneNumber, salt) {
  */
 export function verifyTOTP(phoneNumber, salt, token) {
   const userSecret = getUserSecret(phoneNumber, salt);
-  // The `verify` method checks the token against the current and adjacent
-  // time-steps, as configured in the options.
   return authenticator.verify({ token, secret: userSecret });
 }
 

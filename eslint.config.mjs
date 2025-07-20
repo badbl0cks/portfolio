@@ -1,6 +1,11 @@
-// @ts-check
-import withNuxt from '.nuxt/eslint.config.mjs'
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
+import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-export default withNuxt(
-  // Your custom configs here
-)
+const { withNuxt } = await import(
+  resolve(__dirname, ".nuxt/eslint.config.mjs")
+);
+
+export default withNuxt([eslintPluginPrettierRecommended]);
