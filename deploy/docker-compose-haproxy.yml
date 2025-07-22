@@ -1,0 +1,25 @@
+services:
+  haproxy:
+    image: haproxy:3.2
+    stop_signal: SIGTERM
+    container_name: haproxy
+    command: ["haproxy", "-f", "/usr/local/etc/haproxy"]
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8404:8404"
+    volumes:
+      - ./configs:/usr/local/etc/haproxy/:ro
+      - ./certs:/certs:ro
+    restart: unless-stopped
+    networks:
+      - proxynet
+    healthcheck:
+      test: ["CMD", "haproxy", "-c", "-f", "/usr/local/etc/haproxy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+networks:
+  proxynet:
+    name: proxynet
+    driver: bridge

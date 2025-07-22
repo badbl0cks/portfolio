@@ -149,8 +149,14 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const api = createSmsGatewayClient(config);
     const finalMessage = `New message from ${name} ( ${phoneNumber} ) via your portfolio:\n\n"${userMessage}"`;
+
+    if (config.androidSmsGatewayBypass === "true") {
+      recordSubmission(phoneNumber);
+      return { success: true, messageId: "bypassed" };
+    }
+
+    const api = createSmsGatewayClient(config);
     const message = {
       phoneNumbers: [config.myPhoneNumber],
       message: finalMessage,

@@ -18,6 +18,8 @@ logs
 .fleet
 .idea
 public/headshot_pp.png
+.secrets
+.claude
 
 # Local env files
 .env

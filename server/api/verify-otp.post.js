@@ -36,6 +36,10 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  if (config.androidSmsGatewayBypass === "true") {
+    return { success: true };
+  }
+
   const isValid = verifyTOTP(
     normalizedPhoneNumber,
     config.superSecretSalt,
@@ -46,7 +50,7 @@ export default defineEventHandler(async (event) => {
     return { success: true };
   } else {
     throw createError({
-      statusCode: 401, // Unauthorized
+      statusCode: 401,
       statusMessage: "Invalid or expired verification code.",
     });
   }

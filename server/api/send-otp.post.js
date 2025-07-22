@@ -43,11 +43,16 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const api = createSmsGatewayClient(config);
     const otp = generateTOTP(normalizedPhoneNumber, config.superSecretSalt);
     const step_min = Math.floor(getTOTPstep() / 60);
     const step_sec = getTOTPstep() % 60;
 
+    if (config.androidSmsGatewayBypass === "true") {
+      recordOtpRequest(normalizedPhoneNumber);
+      return { success: true, messageId: "bypassed" };
+    }
+
+    const api = createSmsGatewayClient(config);
     const message = {
       phoneNumbers: [normalizedPhoneNumber],
       message: `${otp} is your verification code. This code is valid for ${step_min}m${step_sec}s.`,

@@ -1,75 +1,107 @@
-# Nuxt Minimal Starter
+# 🚀 Personal Portfolio Website
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+My schnazzy portfolio turbocharged with Nuxt 4 and zero-downtime deployment wizardry! ✨
 
-## Setup
+## ⭐ What's Inside
 
-Make sure to install dependencies:
+- 🌙 **Dark UI** with DaisyUI components
+- 📱 **SMS Contact Form** with phone verification (because emails are so last millennium)
+- 🎨 **Smooth animations** and typing effects
+- 🐳 **Zero-downtime deployments** via Docker + HAProxy
+- 🔐 **WireGuard tunnel** to home SMS gateway
+
+## 🚀 Quick Start
 
 ```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
+# Install dependencies
 bun install
-```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
+# Start development server
 bun run dev
-```
 
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
+# Build for production
 bun run build
+
+# Generate static site
+bun run generate
 ```
 
-Locally preview production build:
+**Coffee Levels:**  
+☕  
+☕☕  
+☕☕☕  
+☕☕☕☕  
+🚨🚨🚨🚨🚨  
+
+## 📱 Contact System Flow
+
+A bamboozling two-step form: collect message → verify phone → SMS me directly!
+Rate limited to prevent spam-a-geddon. 🚫
+
+## 🏗️ Architecture
+
+```
+🌍 Internet → VPS → 🔐 WireGuard → 🏠 Android SMS Gateway
+```
+
+Copy `.env.example` to `.env` for configuration.
+
+## 🚢 Deployment Shenanigans
+
+Push to `staging` or `release` branches to trigger blue-green deployments!
+
+### Blue-Green Magic ✨
+1. **Build Phase:** Build new containers alongside old ones
+2. **Deploy Phase:** Health check the newbies
+3. **Switch Phase:** HAProxy traffic switcheroo
+4. **Cleanup Phase:** Cleanup old containers
+5. **Moon Phases:** 🌑 🌒 🌓 🌔 🌝 🌖 🌗 🌘 🌚
+
+### GitHub Secrets Setup
+Set these in your repo for deployment thingamajigs:
+- `DEPLOY_KEY`, `DEPLOY_HOST` - SSH access stuff
+- SMS gateway credentials and phone number
+- `NUXT_SUPER_SECRET_SALT` - for cryptographic tomfoolery
+
+### WireGuard Setup
+Copy `wireguard/wg0.conf.template` → `wg0.conf` and fill in your tunnel deets.
+
+## 🔒 Security Fortress
+
+- 🔐 WireGuard tunnel encryption
+- 🛡️ Container firewalls and non-root execution
+- 🔢 TOTP phone verification + rate limiting
+- 🔤 ASCII-only validation (emoji-proof!)
+
+## 🔧 Troubleshooting
 
 ```bash
-# npm
-npm run preview
+# Check container health
+docker-compose ps && docker logs portfolio
 
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
+# Test SMS connectivity
+docker exec portfolio curl -f http://192.168.0.XXX:9090
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+**Debug Panic Levels:** 😎 → 🤔 → 😅 → 😰 → 💀 → 🍕
+
+## 📁 What's Where
+
+```
+├── app/          # Nuxt 4 frontend
+├── server/       # API routes + SMS gateway libs
+├── deploy/       # Deployment scripts
+└── .github/      # CI/CD workflows
+```
+
+## 🤝 Contributing
+
+Feel free to explore the code! This is a personal portfolio, so no contributions are needed, but you can use the architecture and deployment setup for inspiration!
+
+## 📜 License
+
+This project is licensed under **AGPL 3.0 only** - see the [LICENSE](LICENSE) file for details. Any derivative works must also be licensed under AGPL 3.0.
+
+---
+
+*Built with ❤️ and lots of ☕*

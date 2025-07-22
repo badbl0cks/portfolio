@@ -1,0 +1,90 @@
+services:
+  portfolio:
+    image: badbl0cks/portfolio:${IMAGE_TAG:-stable}
+    # image: ghcr.io/xe/x/httpdebug
+    # entrypoint: ["/ko-app/httpdebug", "--bind", ":3000"]
+    container_name: portfolio-${RELEASE_TYPE}-${DEPLOYMENT_COLOR}
+    networks:
+      proxynet:
+        aliases:
+          - portfolio-${RELEASE_TYPE}
+    expose:
+      - "3000"
+    env_file: 
+      - .env
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    labels:
+      - "deployment.color=${DEPLOYMENT_COLOR}"
+      - "deployment.image_tag=${IMAGE_TAG}"
+      - "deployment.release_type=${RELEASE_TYPE}"
+    user: "1000:1000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-s", "--max-time", "5", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 120s
+  wireguard:
+    image: qmcgaw/gluetun
+    cap_add:
+      - NET_ADMIN
+    container_name: wireguard-${RELEASE_TYPE}-${DEPLOYMENT_COLOR}
+    environment:
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - HTTPPROXY=on
+    expose:
+      - "8888"
+    env_file:
+      - .env
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    restart: unless-stopped
+    networks:
+      proxynet:
+        aliases:
+          - wireguard-${RELEASE_TYPE}
+    healthcheck:
+      test: ["CMD", "ping", "-c", "1", "-W", "3", "$$NUXT_ANDROID_SMS_GATEWAY_IP"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 60s
+  anubis:
+    image: ghcr.io/techarohq/anubis:main
+    container_name: "anubis-${RELEASE_TYPE}-${DEPLOYMENT_COLOR}"
+    expose:
+      - "8080"
+      - "9090"
+    environment:
+      - BIND=:8080
+      - TARGET=http://portfolio-${RELEASE_TYPE}-${DEPLOYMENT_COLOR}:3000
+      - DIFFICULTY=4
+      - COOKIE_DOMAIN=${DOMAIN}
+      - COOKIE_PARTITIONED=true
+      - METRICS_BIND=:9090
+      - SERVE_ROBOTS_TXT=true
+      - XFF_STRIP_PRIVATE=false
+      - USE_REMOTE_ADDRESS=true
+      - OG_PASSTHROUGH=true
+      - OG_EXPIRY_TIME=24h
+    restart: unless-stopped
+    networks:
+      proxynet:
+        aliases:
+          - anubis-${RELEASE_TYPE}
+    labels:
+      - "deployment.color=${DEPLOYMENT_COLOR}"
+      - "deployment.release_type=${RELEASE_TYPE}"
+    healthcheck:
+      test: ["CMD", "anubis", "--healthcheck"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
+      start_period: 500ms
+networks:
+  proxynet:
+    external: true
+    name: proxynet

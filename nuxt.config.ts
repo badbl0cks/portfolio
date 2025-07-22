@@ -9,12 +9,10 @@ export default defineNuxtConfig({
   },
   css: ["assets/css/main.css"],
   modules: [
-    "@nuxt/content",
     "@nuxt/eslint",
     "@nuxt/fonts",
     "@nuxt/icon",
     "@nuxt/image",
-    "@nuxt/scripts",
     "@nuxt/test-utils",
     "@nuxt/ui",
   ],
@@ -22,12 +20,13 @@ export default defineNuxtConfig({
     androidSmsGatewayUrl: process.env.NUXT_ANDROID_SMS_GATEWAY_URL,
     androidSmsGatewayLogin: process.env.NUXT_ANDROID_SMS_GATEWAY_LOGIN,
     androidSmsGatewayPassword: process.env.NUXT_ANDROID_SMS_GATEWAY_PASSWORD,
+    androidSmsGatewayBypass: process.env.NUXT_ANDROID_SMS_GATEWAY_BYPASS,
     myPhoneNumber: process.env.NUXT_MY_PHONE_NUMBER,
     superSecretSalt: process.env.NUXT_SUPER_SECRET_SALT,
 
     public: {},
   },
   nitro: {
-    preset: "bun",
+    preset: "node-server",
   },
 });
