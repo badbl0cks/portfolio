@@ -1,17 +1,22 @@
 {
   "name": "nuxt-app",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "dev": "bun --env-file=.env nuxt dev",
+    "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
-  "dependencies": {
-    "@nuxt/content": "3.6.3",
+  "devDependencies": {
+    "eslint": "^9.0.0",
     "@nuxt/eslint": "1.5.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.3"
+  },
+  "dependencies": {
     "@nuxt/fonts": "0.11.4",
     "@nuxt/icon": "1.15.0",
     "@nuxt/image": "1.10.0",
@@ -22,9 +27,6 @@
     "android-sms-gateway": "^3.0.0",
     "better-sqlite3": "^12.2.0",
     "daisyui": "^5.0.46",
-    "eslint": "^9.0.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.3",
     "husky": "^9.1.7",
     "nuxt": "^4.0.0",
     "otplib": "^12.0.1",

@@ -27,4 +27,7 @@ export default defineNuxtConfig({
 
     public: {},
   },
+  nitro: {
+    preset: "bun",
+  },
 });
