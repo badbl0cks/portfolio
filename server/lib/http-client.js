@@ -1,14 +1,14 @@
 import { ProxyAgent } from "undici";
 
 const proxyAgent = new ProxyAgent("http://wireguard:8888");
-const REQUEST_TIMEOUT = 5000;
+const REQUEST_TIMEOUT = 15000;
 
 export const httpFetchClient = {
   get: async (url, headers) => {
     const response = await $fetch(url, {
       method: "GET",
       headers,
-      agent: proxyAgent,
+      dispatcher: proxyAgent,
       timeout: REQUEST_TIMEOUT,
     });
     return response;
@@ -18,7 +18,7 @@ export const httpFetchClient = {
       method: "POST",
       headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify(body),
-      agent: proxyAgent,
+      dispatcher: proxyAgent,
       timeout: REQUEST_TIMEOUT,
     });
     return response;

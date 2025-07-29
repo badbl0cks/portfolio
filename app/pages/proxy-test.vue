@@ -106,7 +106,8 @@
             </div>
             <div v-if="loading" class="text-center">
               <span class="loading loading-spinner loading-lg"></span>
-              <p class="mt-2">Running tests...</p>
+              <p class="mt-2">Running tests... This may take up to 60 seconds.</p>
+              <p class="text-sm text-base-content/70 mt-1">Testing proxy connectivity and SMS gateway endpoints.</p>
             </div>
           </div>
         </div>
@@ -377,6 +378,57 @@
           </div>
         </div>
 
+        <!-- Global Error Display -->
+        <div v-if="testData?.error && !testData?.tests" class="card bg-base-100 shadow-xl mb-6">
+          <div class="card-body">
+            <h2 class="card-title text-2xl mb-4 text-error">Test Execution Failed</h2>
+            <div class="alert alert-error mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <strong>{{ testData.errorType || 'Error' }}:</strong> {{ testData.error }}
+              </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div class="stat bg-base-200 rounded-lg">
+                <div class="stat-title">Test Type</div>
+                <div class="stat-value text-lg">{{ testData.testType || 'Unknown' }}</div>
+              </div>
+              <div class="stat bg-base-200 rounded-lg">
+                <div class="stat-title">Duration</div>
+                <div class="stat-value text-lg">{{ testData.duration || 'Unknown' }}</div>
+              </div>
+              <div class="stat bg-base-200 rounded-lg">
+                <div class="stat-title">Timestamp</div>
+                <div class="stat-value text-lg">{{ testData.timestamp ? new Date(testData.timestamp).toLocaleTimeString() : 'Unknown' }}</div>
+              </div>
+            </div>
+            
+            <div v-if="testData.details" class="collapse collapse-arrow bg-base-200">
+              <input type="checkbox" />
+              <div class="collapse-title text-xl font-medium">
+                Technical Details
+              </div>
+              <div class="collapse-content">
+                <pre class="text-sm bg-base-300 p-4 rounded-lg overflow-x-auto">{{ JSON.stringify(testData.details, null, 2) }}</pre>
+              </div>
+            </div>
+            
+            <div class="mt-4 p-4 bg-info/10 rounded-lg">
+              <h3 class="font-semibold mb-2">Troubleshooting Tips:</h3>
+              <ul class="list-disc list-inside space-y-1 text-sm">
+                <li v-if="testData.errorType === 'Timeout'">Check if the WireGuard proxy container is running and accessible</li>
+                <li v-if="testData.errorType === 'Network Error'">Verify network connectivity and DNS resolution</li>
+                <li>Ensure SMS Gateway URL is correctly configured in environment variables</li>
+                <li>Check if the SMS Gateway service is running and accessible</li>
+                <li>Verify proxy configuration: http://wireguard:8888</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         <!-- Error Summary -->
         <div v-if="hasErrors" class="card bg-base-100 shadow-xl mb-6">
           <div class="card-body">
@@ -417,8 +469,11 @@
                 Raw Test Data (JSON)
               </div>
               <div class="collapse-content">
+                <div class="mb-2 text-sm text-base-content/70">
+                  Copy this data when reporting issues or debugging.
+                </div>
                 <pre
-                  class="text-sm bg-base-300 p-4 rounded-lg overflow-x-auto"
+                  class="text-sm bg-base-300 p-4 rounded-lg overflow-x-auto select-all"
                   >{{ JSON.stringify(testData, null, 2) }}</pre
                 >
               </div>
@@ -480,15 +535,52 @@ const errorSummary = computed(() => {
 
 const runTests = async (testType = "all") => {
   loading.value = true;
+  const startTime = Date.now();
+  
   try {
-    const response = await $fetch(`/api/proxy-test?test=${testType}`);
+    // Set a generous timeout (60 seconds) for comprehensive tests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 60000);
+    
+    const response = await $fetch(`/api/proxy-test?test=${testType}`, {
+      signal: controller.signal,
+      timeout: 60000
+    });
+    
+    clearTimeout(timeoutId);
     testData.value = response;
+    
   } catch (error) {
+    const duration = Date.now() - startTime;
     console.error("Failed to run tests:", error);
-    testData.value = {
-      error: error.message,
+    
+    // Provide comprehensive error information
+    const errorInfo = {
+      error: error.message || 'Unknown error occurred',
+      errorType: error.name || 'Error',
+      duration: `${duration}ms`,
       timestamp: new Date().toISOString(),
+      testType,
+      details: {
+        code: error.code,
+        status: error.status || error.statusCode,
+        data: error.data,
+        stack: error.stack
+      }
     };
+    
+    // Handle specific error types
+    if (error.name === 'AbortError' || error.message?.includes('aborted')) {
+      errorInfo.error = `Test timed out after ${duration}ms. The proxy or SMS gateway may be unreachable.`;
+      errorInfo.errorType = 'Timeout';
+    } else if (error.name === 'FetchError' || error.message?.includes('fetch')) {
+      errorInfo.error = `Network error: ${error.message}. Check proxy configuration and network connectivity.`;
+      errorInfo.errorType = 'Network Error';
+    }
+    
+    testData.value = errorInfo;
   } finally {
     loading.value = false;
   }
