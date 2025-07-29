@@ -1,6 +1,7 @@
 import { ProxyAgent } from "undici";
 
 const proxyAgent = new ProxyAgent("http://wireguard:8888");
+const REQUEST_TIMEOUT = 5000;
 
 export const httpFetchClient = {
   get: async (url, headers) => {
@@ -8,13 +9,9 @@ export const httpFetchClient = {
       method: "GET",
       headers,
       agent: proxyAgent,
+      timeout: REQUEST_TIMEOUT,
     });
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error("Gateway GET error:", errorBody);
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
+    return response;
   },
   post: async (url, body, headers) => {
     const response = await $fetch(url, {
@@ -22,14 +19,8 @@ export const httpFetchClient = {
       headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify(body),
       agent: proxyAgent,
+      timeout: REQUEST_TIMEOUT,
     });
-    if (!response.ok) {
-      const errorBody = await response.text();
-      console.error("Gateway POST error:", errorBody);
-      throw new Error(
-        `HTTP error! status: ${response.status}, body: ${errorBody}`,
-      );
-    }
-    return response.json();
+    return response;
   },
 };
