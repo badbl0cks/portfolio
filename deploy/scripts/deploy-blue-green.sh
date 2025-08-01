@@ -9,14 +9,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/common-lib.sh"
 
 # Validate required environment variables
-require_var "DOCKER_HOST"
-require_var "REPO_PROJECT_PATH"
-require_var "REPO_NAME_ONLY"
-require_var "REPO"
 require_var "IMAGE_TAR"
 require_var "PROD"
 require_var "DOMAIN"
 require_var "WIREGUARD_ENDPOINT_HOST"
+require_var "REPO_PROJECT_PATH"
+require_var "DEPLOY_HOST"
 
 validate_deployment_env
 
@@ -76,10 +74,18 @@ echo "DEPLOYMENT_COLOR=\"${NEW_COLOR}\"" >> .env
 echo "RELEASE_TYPE=\"${RELEASE_TYPE}\"" >> .env
 echo "WIREGUARD_ENDPOINT_IP=\"${WIREGUARD_ENDPOINT_IP}\"" >> .env
 
+# Set computed image name based on release type
+if [ "$RELEASE_TYPE" = "staging" ]; then
+    IMAGE_NAME="portfolio-dev:${IMAGE_TAG}"
+else
+    IMAGE_NAME="portfolio:${IMAGE_TAG}"
+fi
+echo "IMAGE_NAME=\"${IMAGE_NAME}\"" >> .env
+
 echo "📋 Copying deployment files..."
 scp deploy/docker-compose.yml deploy/haproxy.cfg .env deploy:"${NEW_RELEASE_PATH}/"
 
-echo "🐳 Loading Docker image..."
+echo "🐳 Loading Docker image (${IMAGE_TAR})..."
 docker load -i "${IMAGE_TAR}"
 
 PROJECT_NAME=$(get_project_name "$NEW_COLOR")

@@ -10,6 +10,9 @@ else
     exit 1
 fi
 
+# Validate common required environment variables
+require_var "DEPLOY_HOST"
+
 readonly HAPROXY_BASE_DIR="/srv/haproxy"
 readonly HAPROXY_CONFIGS_DIR="${HAPROXY_BASE_DIR}/configs"
 readonly HAPROXY_COMPOSE_FILE="${HAPROXY_BASE_DIR}/docker-compose.yml"

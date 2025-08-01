@@ -1,9 +1,44 @@
 {
-  "branches": [
-    "main"
-  ],
+  "branches": ["main"],
+  "preset": "conventionalcommits",
+  "presetConfig": {
+    "types": [
+      { "type": "breaking", "section": "BREAKING CHANGES" },
+      { "type": "feat", "section": "New Features" },
+      { "type": "new", "section": "New Features" },
+      { "type": "update", "section": "Dependencies" },
+      { "type": "upgrade", "section": "Dependencies" },
+      { "type": "deps", "section": "Dependencies" },
+      { "type": "fix", "section": "Bug Fixes" },
+      { "type": "build", "section": "Building and CI" },
+      { "type": "ci", "section": "Building and CI" },
+      { "type": "chore", "hidden": true },
+      { "type": "docs", "hidden": true },
+      { "type": "refactor", "hidden": true }
+    ]
+  },
   "plugins": [
-    "@semantic-release/commit-analyzer",
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "releaseRules": [
+          { "breaking": true, "release": "major" },
+          { "revert": true, "release": "patch" },
+          { "type": "breaking", "release": "major" },
+          { "type": "feat", "release": "minor" },
+          { "type": "update", "release": "minor" },
+          { "type": "upgrade", "release": "minor" },
+          { "type": "deps", "release": "minor" },
+          { "type": "new", "release": "minor" },
+          { "type": "fix", "release": "patch" },
+          { "type": "build", "release": false },
+          { "type": "ci", "release": false },
+          { "type": "chore", "release": false },
+          { "type": "docs", "release": false },
+          { "type": "refactor", "release": false }
+        ]
+      }
+    ],
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
     [
@@ -16,7 +51,7 @@
     [
       "@semantic-release/git",
       {
-        "assets": ["CHANGELOG.md", "package.json", "package-lock.json", "bun.lock"],
+        "assets": ["CHANGELOG.md", "package.json", "package-lock.json"],
         "message": "chore: Release ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ]

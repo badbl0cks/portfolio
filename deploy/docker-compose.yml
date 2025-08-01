@@ -1,6 +1,6 @@
 services:
   portfolio:
-    image: badbl0cks/portfolio:${IMAGE_TAG:-stable}
+    image: ${IMAGE_NAME:-portfolio:latest}
     # image: ghcr.io/xe/x/httpdebug
     # entrypoint: ["/ko-app/httpdebug", "--bind", ":3000"]
     container_name: portfolio-${RELEASE_TYPE}-${DEPLOYMENT_COLOR}
@@ -10,7 +10,7 @@ services:
           - portfolio-${RELEASE_TYPE}
     expose:
       - "3000"
-    env_file: 
+    env_file:
       - .env
     volumes:
       - ./data:/app/data
@@ -21,7 +21,16 @@ services:
       - "deployment.release_type=${RELEASE_TYPE}"
     user: "1000:1000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "-s", "--max-time", "5", "http://localhost:3000/api/health"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "-s",
+          "--max-time",
+          "5",
+          "http://localhost:3000/api/health",
+        ]
       interval: 30s
       timeout: 15s
       retries: 3
@@ -47,7 +56,8 @@ services:
         aliases:
           - wireguard-${RELEASE_TYPE}
     healthcheck:
-      test: ["CMD", "ping", "-c", "1", "-W", "3", "$$NUXT_ANDROID_SMS_GATEWAY_IP"]
+      test:
+        ["CMD", "ping", "-c", "1", "-W", "3", "$$NUXT_ANDROID_SMS_GATEWAY_IP"]
       interval: 30s
       timeout: 15s
       retries: 3
