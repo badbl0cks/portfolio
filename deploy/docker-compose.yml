@@ -13,7 +13,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ./data:/app/data
+      - ../../data:/app/data
+      - /srv/static-assets:/app/static-assets
     restart: unless-stopped
     labels:
       - "deployment.color=${DEPLOYMENT_COLOR}"

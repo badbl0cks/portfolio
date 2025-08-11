@@ -1,4 +1,4 @@
-import pkg from './package.json'
+import pkg from "./package.json";
 
 export default defineNuxtConfig({
   compatibilityDate: "2025-05-15",
@@ -32,5 +32,15 @@ export default defineNuxtConfig({
   },
   nitro: {
     preset: "node-server",
+    publicAssets: [
+      {
+        baseURL: "/",
+        dir: "public",
+      },
+      {
+        baseURL: "/static-assets",
+        dir: "static-assets",
+      },
+    ],
   },
 });

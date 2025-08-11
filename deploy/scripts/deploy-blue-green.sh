@@ -85,6 +85,9 @@ echo "IMAGE_NAME=\"${IMAGE_NAME}\"" >> .env
 echo "📋 Copying deployment files..."
 scp deploy/docker-compose.yml deploy/haproxy.cfg .env deploy:"${NEW_RELEASE_PATH}/"
 
+echo "📁 Ensuring static-assets directory exists..."
+run_on_target "mkdir -p '/srv/static-assets'"
+
 echo "🐳 Loading Docker image (${IMAGE_TAR})..."
 docker load -i "${IMAGE_TAR}"
 

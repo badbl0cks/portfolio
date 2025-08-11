@@ -24,7 +24,7 @@
               <div
                 class="w-48 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2"
               >
-                <NuxtImg src="/headshot_pp.png" alt="Rob" />
+                <NuxtImg src="/static-assets/headshot_pp.png" alt="Rob" />
               </div>
             </div>
           </div>

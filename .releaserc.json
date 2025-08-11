@@ -10,33 +10,36 @@
       { "type": "upgrade", "section": "Dependencies" },
       { "type": "deps", "section": "Dependencies" },
       { "type": "fix", "section": "Bug Fixes" },
-      { "type": "build", "section": "Building and CI" },
-      { "type": "ci", "section": "Building and CI" },
-      { "type": "chore", "hidden": true },
-      { "type": "docs", "hidden": true },
-      { "type": "refactor", "hidden": true }
+      { "type": "build", "section": "Build" },
+      { "type": "ci", "section": "CI/CD" },
+      { "type": "docs", "section": "Documentation" },
+      { "type": "refactor", "section": "Refactor" },
+      { "type": "chore", "hidden": true }
     ]
   },
   "plugins": [
     [
-      "@semantic-release/commit-analyzer",
+      "semantic-release-unsquash",
       {
-        "releaseRules": [
-          { "breaking": true, "release": "major" },
-          { "revert": true, "release": "patch" },
-          { "type": "breaking", "release": "major" },
-          { "type": "feat", "release": "minor" },
-          { "type": "update", "release": "minor" },
-          { "type": "upgrade", "release": "minor" },
-          { "type": "deps", "release": "minor" },
-          { "type": "new", "release": "minor" },
-          { "type": "fix", "release": "patch" },
-          { "type": "build", "release": false },
-          { "type": "ci", "release": false },
-          { "type": "chore", "release": false },
-          { "type": "docs", "release": false },
-          { "type": "refactor", "release": false }
-        ]
+        "commitAnalyzerConfig": {
+          "releaseRules": [
+            { "breaking": true, "release": "major" },
+            { "revert": true, "release": "patch" },
+            { "type": "breaking", "release": "major" },
+            { "type": "feat", "release": "minor" },
+            { "type": "update", "release": "minor" },
+            { "type": "upgrade", "release": "minor" },
+            { "type": "deps", "release": "minor" },
+            { "type": "new", "release": "minor" },
+            { "type": "fix", "release": "patch" },
+            { "type": "build", "release": false },
+            { "type": "ci", "release": false },
+            { "type": "chore", "release": false },
+            { "type": "docs", "release": false },
+            { "type": "refactor", "release": false }
+          ]
+        },
+        "notesGeneratorConfig": false
       }
     ],
     "@semantic-release/release-notes-generator",
@@ -47,7 +50,6 @@
         "npmPublish": false
       }
     ],
-    "@semantic-release/github",
     [
       "@semantic-release/git",
       {
