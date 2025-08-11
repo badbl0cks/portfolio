@@ -31,7 +31,7 @@ SHELL ["bash", "-exc"]
 WORKDIR /app
 
 # Copy source code (excluding semantic-release artifacts)
-COPY nuxt.config.ts tsconfig.json tailwind.config.js eslint.config.mjs ./
+COPY nuxt.config.ts tsconfig.json tailwind.config.js eslint.config.mjs package.json ./
 COPY app/ ./app/
 COPY server/ ./server/
 COPY public/ ./public/

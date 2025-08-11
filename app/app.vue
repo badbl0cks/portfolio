@@ -52,6 +52,7 @@
         </div>
         <div>
           <p>Copyright © {{ new Date().getFullYear() }}</p>
+          <p class="text-sm opacity-75">v{{ $config.public.version }}</p>
         </div>
       </footer>
     </div>

@@ -1,3 +1,5 @@
+import pkg from './package.json'
+
 export default defineNuxtConfig({
   compatibilityDate: "2025-05-15",
   devtools: {
@@ -24,7 +26,9 @@ export default defineNuxtConfig({
     myPhoneNumber: process.env.NUXT_MY_PHONE_NUMBER,
     superSecretSalt: process.env.NUXT_SUPER_SECRET_SALT,
 
-    public: {},
+    public: {
+      version: pkg.version,
+    },
   },
   nitro: {
     preset: "node-server",
