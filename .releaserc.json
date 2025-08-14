@@ -19,27 +19,24 @@
   },
   "plugins": [
     [
-      "semantic-release-unsquash",
+      "@semantic-release/commit-analyzer",
       {
-        "commitAnalyzerConfig": {
-          "releaseRules": [
-            { "breaking": true, "release": "major" },
-            { "revert": true, "release": "patch" },
-            { "type": "breaking", "release": "major" },
-            { "type": "feat", "release": "minor" },
-            { "type": "update", "release": "minor" },
-            { "type": "upgrade", "release": "minor" },
-            { "type": "deps", "release": "minor" },
-            { "type": "new", "release": "minor" },
-            { "type": "fix", "release": "patch" },
-            { "type": "build", "release": false },
-            { "type": "ci", "release": false },
-            { "type": "chore", "release": false },
-            { "type": "docs", "release": false },
-            { "type": "refactor", "release": false }
-          ]
-        },
-        "notesGeneratorConfig": false
+        "releaseRules": [
+          { "breaking": true, "release": "major" },
+          { "revert": true, "release": "patch" },
+          { "type": "breaking", "release": "major" },
+          { "type": "feat", "release": "minor" },
+          { "type": "update", "release": "minor" },
+          { "type": "upgrade", "release": "minor" },
+          { "type": "deps", "release": "minor" },
+          { "type": "new", "release": "minor" },
+          { "type": "fix", "release": "patch" },
+          { "type": "build", "release": false },
+          { "type": "ci", "release": false },
+          { "type": "chore", "release": false },
+          { "type": "docs", "release": false },
+          { "type": "refactor", "release": false }
+        ]
       }
     ],
     "@semantic-release/release-notes-generator",
@@ -50,11 +47,12 @@
         "npmPublish": false
       }
     ],
+    "@semantic-release/github",
     [
       "@semantic-release/git",
       {
         "assets": ["CHANGELOG.md", "package.json", "package-lock.json"],
-        "message": "chore: Release ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        "message": "chore: Release ${nextRelease.version}\n\n${nextRelease.notes}"
       }
     ]
   ]
