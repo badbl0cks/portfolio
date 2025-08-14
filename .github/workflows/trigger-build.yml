@@ -1,0 +1,30 @@
+# yaml-language-server: $schema=https://json-schema.org/draft-07/schema#
+name: Build/Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev, staging, main]
+
+jobs:
+  trigger-dev-build:
+    permissions:
+      actions: read
+      contents: read
+    if: ${{ github.ref == 'refs/heads/dev' }}
+    uses: badbl0cks/portfolio/.github/workflows/build.yml@dev
+    secrets: inherit
+  trigger-staging-build:
+    permissions:
+      actions: read
+      contents: read
+    if: ${{ github.ref == 'refs/heads/staging' }}
+    uses: badbl0cks/portfolio/.github/workflows/build.yml@staging
+    secrets: inherit
+  trigger-main-build:
+    permissions:
+      actions: read
+      contents: read
+    if: ${{ github.ref == 'refs/heads/main' }}
+    uses: badbl0cks/portfolio/.github/workflows/build.yml@main
+    secrets: inherit

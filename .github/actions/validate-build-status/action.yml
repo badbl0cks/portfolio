@@ -1,0 +1,140 @@
+name: "Validate Build Status"
+description: "Validate that a build workflow has completed successfully for a specific branch and commit"
+author: "Portfolio CI/CD"
+
+inputs:
+  from-branch:
+    description: "Name of the branch to check (e.g., dev, staging)"
+    required: true
+  to-branch:
+    description: "Base branch to compare against (e.g., staging, main)"
+    required: true
+  job-name:
+    description: "Name of the build job to check"
+    required: true
+  workflow-name:
+    description: "Name of the workflow to check"
+    required: false
+    default: "Build/Deploy"
+  force:
+    description: "Force validation even if other conditions fail"
+    required: false
+    default: "false"
+
+outputs:
+  should-proceed:
+    description: "Whether the validation passed and should proceed"
+    value: ${{ steps.validation.outputs.should_proceed }}
+  commits-ahead:
+    description: "Number of commits ahead of comparison branch"
+    value: ${{ steps.validation.outputs.commits_ahead }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run validation checks
+      id: validation
+      shell: bash
+      run: |
+        echo "🔍 Running build validation checks for ${{ inputs.from-branch }}..."
+
+        # Check if there are new commits in branch since last comparison
+        git checkout ${{ inputs.from-branch }}
+        # git fetch --tags
+        # git pull --tags
+        COMMITS_AHEAD=$(git rev-list --count origin/${{ inputs.to-branch }}..${{ inputs.from-branch }})
+        echo "📊 Commits ahead of ${{ inputs.to-branch }}: $COMMITS_AHEAD"
+        echo "commits_ahead=$COMMITS_AHEAD" >> $GITHUB_OUTPUT
+
+        if [[ "${{ inputs.force }}" == "true" ]]; then
+          echo "⚡ Force flag enabled - skipping all validation checks"
+          echo "should_proceed=true" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        if [ "$COMMITS_AHEAD" -eq 0 ]; then
+          echo "ℹ️ No new commits to process"
+          echo "should_proceed=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        # Check for any [skip ci] in recent commit messages
+        SKIP_CI=$(git log --oneline origin/${{ inputs.to-branch }}..${{ inputs.from-branch }} | grep -i "\[skip ci\]" || true)
+        if [ -n "$SKIP_CI" ]; then
+          echo "⏭️ Skipping processing due to [skip ci] flag in commits"
+          echo "should_proceed=false" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+
+        # Get the actual branch HEAD commit
+        COMMIT_SHA=$(git rev-parse ${{ inputs.from-branch }})
+        echo "🔍 Checking build job status for ${{ inputs.from-branch }} commit: $COMMIT_SHA"
+
+        # Get workflow runs for the specific commit
+        echo "🔍 Querying GitHub API for workflow runs..."
+        RUNS_RESPONSE=$(curl -s -H "Authorization: Bearer ${{ github.token }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          "https://api.github.com/repos/${{ github.repository }}/actions/runs?head_sha=${COMMIT_SHA}")
+
+        # Check if API call was successful
+        if [ $? -ne 0 ]; then
+          echo "❌ Failed to call GitHub API"
+          echo "::error::GitHub API call failed"
+          exit 1
+        fi
+
+        # Check if response contains total_count
+        WORKFLOW_RUNS_COUNT=$(echo "$RUNS_RESPONSE" | jq -r '.total_count' 2>/dev/null || echo "error")
+
+        if [ "$WORKFLOW_RUNS_COUNT" = "error" ] || [ "$WORKFLOW_RUNS_COUNT" = "null" ]; then
+          echo "❌ Invalid API response format"
+          echo "API Response: $RUNS_RESPONSE"
+          echo "::error::Invalid response from GitHub API"
+          exit 1
+        fi
+
+        echo "📊 Found $WORKFLOW_RUNS_COUNT workflow run(s) for commit $COMMIT_SHA"
+
+        # Extract run ID for build_deploy.yml workflow (safely handle empty results)
+        BUILD_RUN_ID=$(echo "$RUNS_RESPONSE" | jq -r '.workflow_runs[] | select(.name == "${{ inputs.workflow-name }}") | .id' 2>/dev/null | head -1)
+
+        # Remove any whitespace/newlines
+        BUILD_RUN_ID=$(echo "$BUILD_RUN_ID" | tr -d '\n\r ')
+
+        if [ -z "$BUILD_RUN_ID" ] || [ "$BUILD_RUN_ID" = "null" ]; then
+          echo "❌ No build workflow run found for commit ${COMMIT_SHA}"
+          echo "::error::Expected build workflow run not found - this indicates a problem with the CI/CD pipeline"
+          exit 1
+        fi
+
+        echo "✅ Found build workflow run: $BUILD_RUN_ID"
+
+        # Get jobs for the workflow run
+        JOBS_RESPONSE=$(curl -s -H "Authorization: Bearer ${{ github.token }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          "https://api.github.com/repos/${{ github.repository }}/actions/runs/${BUILD_RUN_ID}/jobs")
+
+        # Find the build job status
+        BUILD_JOB_STATUS=$(echo "$JOBS_RESPONSE" | jq -r '.jobs[] | select(.name == "${{ inputs.job-name }}") | .status')
+        BUILD_JOB_CONCLUSION=$(echo "$JOBS_RESPONSE" | jq -r '.jobs[] | select(.name == "${{ inputs.job-name }}") | .conclusion')
+
+        echo "📊 Build job status: $BUILD_JOB_STATUS, conclusion: $BUILD_JOB_CONCLUSION"
+
+        if [ "$BUILD_JOB_STATUS" = "completed" ] && ([ "$BUILD_JOB_CONCLUSION" = "success" ] || [ "$BUILD_JOB_CONCLUSION" = "skipped" ]); then
+          if [ "$BUILD_JOB_CONCLUSION" = "skipped" ]; then
+            echo "✅ Build job skipped (artifact already exists)!"
+          else
+            echo "✅ Build job completed successfully!"
+          fi
+        else
+          echo "❌ Build job not successful (status: $BUILD_JOB_STATUS, conclusion: $BUILD_JOB_CONCLUSION)"
+          echo "🔗 View job details: https://github.com/${{ github.repository }}/actions/runs/${BUILD_RUN_ID}"
+          echo "If job is in_progress, wait for it to complete, then re-run this workflow"
+          echo "should_proceed=false" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
+        echo "✅ No blockers, ready to proceed"
+        echo "should_proceed=true" >> $GITHUB_OUTPUT

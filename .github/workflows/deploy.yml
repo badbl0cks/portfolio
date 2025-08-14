@@ -1,0 +1,159 @@
+# yaml-language-server: $schema=https://json-schema.org/draft-07/schema#
+name: _deploy
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Tag to deploy"
+        required: true
+        type: string
+      prod:
+        description: "Whether to deploy to production"
+        required: true
+        type: boolean
+      image-tar:
+        description: "Name of image tarball"
+        required: true
+        type: string
+      artifact-run-id:
+        description: "ID of workflow run where artifact was created"
+        required: true
+        type: string
+      artifact-id:
+        description: "ID of artifact"
+        required: true
+        type: string
+      build-sha:
+        description: "SHA of build"
+        required: true
+        type: string
+      repo-name:
+        description: "Name of repository"
+        required: true
+        type: string
+      repo-path:
+        description: "Path to repository on server"
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.prod && 'production' || 'staging' }}
+    env:
+      RELEASE_TYPE: ${{ inputs.prod && 'prod' || 'staging' }}
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure scripts are executable
+        run: chmod +x deploy/scripts/*.sh
+
+      - name: Setup environment configuration
+        uses: ./.github/actions/setup-environment
+        with:
+          release-type: ${{ inputs.prod && 'prod' || 'staging' }}
+          domain: ${{ secrets.DOMAIN }}
+          android-sms-gateway-url: ${{ secrets.NUXT_ANDROID_SMS_GATEWAY_URL }}
+          android-sms-gateway-login: ${{ secrets.NUXT_ANDROID_SMS_GATEWAY_LOGIN }}
+          android-sms-gateway-password: ${{ secrets.NUXT_ANDROID_SMS_GATEWAY_PASSWORD }}
+          my-phone-number: ${{ secrets.NUXT_MY_PHONE_NUMBER }}
+          super-secret-salt: ${{ secrets.NUXT_SUPER_SECRET_SALT }}
+          wireguard-allowed-ips: ${{ secrets.WIREGUARD_ALLOWED_IPS }}
+          wireguard-private-key: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
+          wireguard-addresses: ${{ secrets.WIREGUARD_ADDRESSES }}
+          wireguard-public-key: ${{ secrets.WIREGUARD_PUBLIC_KEY }}
+          wireguard-endpoint-host: ${{ secrets.WIREGUARD_ENDPOINT_HOST }}
+          wireguard-endpoint-port: ${{ secrets.WIREGUARD_ENDPOINT_PORT }}
+          prod: ${{ inputs.prod }}
+
+      - name: Set up SSH
+        run: |
+          mkdir -p $HOME/.ssh
+          echo -e "${{ secrets.DEPLOY_KEY }}" > $HOME/.ssh/deploy.key
+          chmod 700 $HOME/.ssh
+          chmod 600 $HOME/.ssh/deploy.key
+
+          cat >>$HOME/.ssh/config <<END
+          Host deploy
+              HostName ${{ secrets.DEPLOY_HOST }}
+              Port ${{ secrets.DEPLOY_PORT }}
+              User ${{ secrets.DEPLOY_USER }}
+              IdentityFile $HOME/.ssh/deploy.key
+              UserKnownHostsFile /dev/null
+              StrictHostKeyChecking no
+              ControlMaster auto
+              ControlPath $HOME/.ssh/control-%C
+              ControlPersist yes
+              LogLevel QUIET
+              ConnectionAttempts 3
+              ConnectTimeout 10
+              ServerAliveInterval 10
+          END
+
+      - name: Download container image artifact
+        id: download-artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}
+          github-token: ${{ github.token }}
+          artifact-ids: ${{ inputs.artifact-id }}
+          run-id: ${{ inputs.artifact-run-id }}
+
+      - name: Configure HAProxy
+        env:
+          DOCKER_HOST: ssh://deploy
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DOMAIN: ${{ secrets.DOMAIN }}
+          BACKEND_NAME: ${{ inputs.repo-name }}-${{ env.RELEASE_TYPE }}
+          CF_PEM_CERT: ${{ secrets.CF_PEM_CERT }}
+          CF_PEM_CA: ${{ secrets.CF_PEM_CA }}
+        run: |
+          echo "✅ Exit on any error"
+          set -eu -o pipefail
+
+          echo "🔄 Load environment variables"
+          set -a
+          source .env
+          set +a
+
+          echo "🎯 Running HAProxy configuration script"
+          ./deploy/scripts/configure-haproxy.sh add "$BACKEND_NAME"
+
+      - name: Deploy to Server
+        env:
+          IMAGE_TAR: ${{ steps.download-artifact.outputs.download-path }}/${{ inputs.image-tar }}/${{ inputs.image-tar }}
+          REPO_PROJECT_PATH: ${{ inputs.repo-path }}
+          IMAGE_TAG: ${{ inputs.tag }}
+          GIT_SHA: ${{ inputs.build-sha }}
+          DOCKER_HOST: ssh://deploy
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          echo "✅ Exit on any error"
+          set -eu -o pipefail
+
+          echo "🔄 Load environment variables"
+          set -a
+          source .env
+          set +a
+
+          echo "🎯 Running deployment script"
+          ./deploy/scripts/deploy-blue-green.sh
+
+      - name: Notify successful deployment
+        run: |
+          echo "🎉 Deployment completed successfully!"
+          echo "📋 Summary:"
+          echo "  - Source: ${{ inputs.prod && 'main (production)' || 'staging' }} branch"
+          echo "  - Status: ✅ Deployed Successfully"
+          echo "  - Next: Verify deployment status!"

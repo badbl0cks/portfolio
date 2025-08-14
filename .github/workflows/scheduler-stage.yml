@@ -1,0 +1,33 @@
+name: Stage
+
+permissions:
+  actions: read
+  contents: write
+
+on:
+  schedule:
+    # Run daily Monday-Friday at 13:00 UTC/05:00 PST (UTC-08)
+    - cron: "0 13 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      force_staging:
+        description: "Force staging even if validation fails"
+        required: false
+        default: false
+        type: boolean
+      note_for_dispatch:
+        description: "Note: This workflow will always call stage.yml@dev, but it MUST BE RUN FROM THE MAIN BRANCH to ensure environment consistency."
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  call-staging-workflow:
+    permissions:
+      actions: read
+      contents: write
+    uses: badbl0cks/portfolio/.github/workflows/stage.yml@dev
+    if: github.ref == 'refs/heads/main'
+    with:
+      force_staging: ${{ inputs.force_staging || false }}
+    secrets: inherit

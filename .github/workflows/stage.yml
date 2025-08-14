@@ -1,0 +1,80 @@
+name: _stage
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: stage
+  cancel-in-progress: false
+
+on:
+  workflow_call:
+    inputs:
+      force_staging:
+        description: "Force staging even if validation fails"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  validate-dev-build:
+    runs-on: ubuntu-latest
+    outputs:
+      should_stage: ${{ steps.validation.outputs.should-proceed }}
+    steps:
+      - name: Checkout dev
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: dev
+
+      - name: Validate dev build status
+        id: validation
+        uses: ./.github/actions/validate-build-status
+        with:
+          job-name: trigger-dev-build / build
+          from-branch: dev
+          to-branch: staging
+          force: ${{ inputs.force_staging }}
+
+  push-to-staging:
+    needs: validate-dev-build
+    runs-on: ubuntu-latest
+    if: ${{ inputs.force_staging == true || needs.validate-dev-build.outputs.should_stage == 'true' }}
+    steps:
+      - name: Checkout dev
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: dev
+
+      - name: Setup Git SSH for push operations
+        uses: ./.github/actions/setup-git-ssh
+        with:
+          push-ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          actor: ${{ github.actor }}
+          actor-id: ${{ github.actor_id }}
+
+      - name: Reset staging branch to refs/heads/dev
+        run: |
+          echo "🚀 Resetting staging branch..."
+
+          git checkout staging
+          git reset --hard dev
+          echo "✅ Staging branch reset to refs/heads/dev"
+
+      - name: Push to git origin
+        uses: ./.github/actions/push-to-origin
+        with:
+          git-origin-url: ${{ secrets.GIT_ORIGIN_REPO_URL }}
+          branches: staging
+          force: true
+
+      - name: Notify successful staging
+        run: |
+          echo "🎉 Staging completed successfully!"
+          echo "📋 Summary:"
+          echo "  - Source: dev branch"
+          echo "  - Status: ✅ Pushed to staging"
+          echo "  - Next: Perform staging and integration tests. If satisfactory, manually dispatch the staging-to-main workflow to generate a production release, which will then trigger a production build and deployment."

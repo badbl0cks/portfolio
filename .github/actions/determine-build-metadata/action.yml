@@ -1,0 +1,45 @@
+name: "Determine Build Metadata"
+description: "Extract repository metadata and build configuration from GitHub context"
+author: "Portfolio CI/CD"
+
+inputs:
+  repository:
+    description: "Repository name in format owner/repo"
+    required: true
+  github-ref:
+    description: "GitHub ref (e.g., refs/heads/main, refs/tags/v1.0.0)"
+    required: true
+
+outputs:
+  repo-name:
+    description: "Repository name only (without owner)"
+    value: ${{ steps.meta.outputs.repo-name }}
+  repo-path:
+    description: "Server deployment path"
+    value: ${{ steps.meta.outputs.repo-path }}
+  prod:
+    description: "Whether this is a production build (true/false)"
+    value: ${{ steps.meta.outputs.prod }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Extract metadata
+      id: meta
+      shell: bash
+      run: |
+        set -eu -o pipefail
+
+        REPO="${{ inputs.repository }}"
+        REPO_NAME_ONLY="$(echo "${REPO}" | cut -d'/' -f2)"
+        REPO_PROJECT_PATH="/srv/${REPO_NAME_ONLY}"
+        PROD="${{ startsWith(inputs.github-ref, 'refs/heads/main') }}"
+
+
+        echo "🖊️ Writing determined values:"
+        echo "repo-name=$REPO_NAME_ONLY" >> $GITHUB_OUTPUT
+        echo "repo-name -> $REPO_NAME_ONLY"
+        echo "repo-path=$REPO_PROJECT_PATH" >> $GITHUB_OUTPUT
+        echo "repo-path -> $REPO_PROJECT_PATH"
+        echo "prod=$PROD" >> $GITHUB_OUTPUT
+        echo "prod -> $PROD"

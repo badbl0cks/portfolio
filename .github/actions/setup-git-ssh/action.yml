@@ -1,0 +1,52 @@
+name: "Setup Git SSH"
+description: "Configure SSH key and Git signing for commits and pushes"
+author: "Portfolio CI/CD"
+
+inputs:
+  commit-ssh-private-key:
+    description: "SSH private key for commit signing"
+    required: false
+  push-ssh-private-key:
+    description: "SSH private key for git-origin operations"
+    required: false
+  actor:
+    description: "GitHub actor name for git user configuration"
+    default: ""
+    required: false
+  actor-id:
+    description: "GitHub actor ID for git email configuration"
+    default: ""
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup git user.name and user.email
+      shell: bash
+      run: |
+        git config user.name "${{ inputs.actor != '' && inputs.actor || github.actor }}"
+        git config user.email "${{ inputs.actor-id != '' && inputs.actor-id || github.actor_id }}+${{ inputs.actor != '' && inputs.actor || github.actor }}@users.noreply.github.com"
+    - name: Setup SSH for key-based push
+      shell: bash
+      if: ${{ inputs.push-ssh-private-key != '' }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ inputs.push-ssh-private-key }}" > ~/.ssh/id-push
+        chmod 600 ~/.ssh/id-push
+        cat > ~/.ssh/config <<EOF
+        Host *
+            UserKnownHostsFile /dev/null
+            StrictHostKeyChecking no
+            IdentityFile $HOME/.ssh/id-push
+            LogLevel QUIET
+        EOF
+    - name: Setup git for commit signing
+      shell: bash
+      if: ${{ inputs.commit-ssh-private-key != '' }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ inputs.commit-ssh-private-key }}" > ~/.ssh/id-commit  
+        chmod 600 ~/.ssh/id-commit
+        git config gpg.format ssh
+        git config user.signingkey ~/.ssh/id-commit
+        git config commit.gpgsign true

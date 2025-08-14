@@ -1,0 +1,78 @@
+name: 'Setup Environment'
+description: 'Create environment files and variables for deployment'
+author: 'Portfolio CI/CD'
+
+inputs:
+  release-type:
+    description: 'Release type (staging or prod)'
+    required: true
+  domain:
+    description: 'Domain name'
+    required: true
+  android-sms-gateway-url:
+    description: 'Android SMS Gateway URL'
+    required: true
+  android-sms-gateway-login:
+    description: 'Android SMS Gateway login'
+    required: true
+  android-sms-gateway-password:
+    description: 'Android SMS Gateway password'
+    required: true
+  my-phone-number:
+    description: 'Phone number for SMS delivery'
+    required: true
+  super-secret-salt:
+    description: 'Secret salt for TOTP generation'
+    required: true
+  wireguard-allowed-ips:
+    description: 'WireGuard allowed IPs'
+    required: true
+  wireguard-private-key:
+    description: 'WireGuard private key'
+    required: true
+  wireguard-addresses:
+    description: 'WireGuard addresses'
+    required: true
+  wireguard-public-key:
+    description: 'WireGuard public key'
+    required: true
+  wireguard-endpoint-host:
+    description: 'WireGuard endpoint host'
+    required: true
+  wireguard-endpoint-port:
+    description: 'WireGuard endpoint port'
+    required: true
+  prod:
+    description: 'Whether this is a production deployment (true/false)'
+    required: false
+    default: 'false'
+
+outputs:
+  env-file:
+    description: 'Path to the created .env file'
+    value: '.env'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Create .env from secrets and environment variables
+      shell: bash
+      run: |
+        echo "🔧 Creating environment configuration..."
+        
+        echo "DOMAIN=\"${{ inputs.domain }}\"" > .env
+        echo "NUXT_ANDROID_SMS_GATEWAY_URL=\"${{ inputs.android-sms-gateway-url }}\"" >> .env
+        echo "NUXT_ANDROID_SMS_GATEWAY_LOGIN=\"${{ inputs.android-sms-gateway-login }}\"" >> .env
+        echo "NUXT_ANDROID_SMS_GATEWAY_PASSWORD=\"${{ inputs.android-sms-gateway-password }}\"" >> .env
+        echo "NUXT_MY_PHONE_NUMBER=\"${{ inputs.my-phone-number }}\"" >> .env
+        echo "NUXT_SUPER_SECRET_SALT=\"${{ inputs.super-secret-salt }}\"" >> .env
+        echo "WIREGUARD_ALLOWED_IPS=\"${{ inputs.wireguard-allowed-ips }}\"" >> .env
+        echo "WIREGUARD_PRIVATE_KEY=\"${{ inputs.wireguard-private-key }}\"" >> .env
+        echo "WIREGUARD_ADDRESSES=\"${{ inputs.wireguard-addresses }}\"" >> .env
+        echo "WIREGUARD_PUBLIC_KEY=\"${{ inputs.wireguard-public-key }}\"" >> .env
+        echo "WIREGUARD_ENDPOINT_HOST=\"${{ inputs.wireguard-endpoint-host }}\"" >> .env
+        echo "WIREGUARD_ENDPOINT_PORT=\"${{ inputs.wireguard-endpoint-port }}\"" >> .env
+        echo "RELEASE_TYPE=\"${{ inputs.release-type }}\"" >> .env
+        echo "PROD=\"${{ inputs.prod }}\"" >> .env
+        
+        echo "✅ Environment file created with $(wc -l < .env) variables"

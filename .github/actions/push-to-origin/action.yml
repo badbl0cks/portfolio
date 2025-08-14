@@ -1,0 +1,57 @@
+name: "Push to Git Origin"
+description: "Push branches and tags to Git origin repository"
+author: "Portfolio CI/CD"
+
+inputs:
+  git-origin-url:
+    description: "Git origin repository URL (e.g., git@example.com:user/repo.git)"
+    required: true
+  branches:
+    description: 'Space-separated list of branches to push (e.g., "main staging dev" or "staging")'
+    required: true
+  push-tags:
+    description: "Whether to push tags along with branches"
+    required: false
+    default: "false"
+  force:
+    description: "Whether to force push"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Git Remotes
+      shell: bash
+      run: |
+        echo "🔧 Setting up git remotes..."
+
+        git remote remove git-origin 2>/dev/null || true
+        git remote add git-origin ${{ inputs.git-origin-url }}
+
+        echo "✅ git-origin remote configured"
+
+    - name: Push to Git Origin
+      shell: bash
+      run: |
+        echo "📤 Pushing to Git Origin..."
+
+        PUSH_ARGS="${{ inputs.branches }}"
+
+        if [[ "${{ inputs.push-tags }}" == "true" ]]; then
+          PUSH_ARGS="$PUSH_ARGS --tags"
+          echo "🏷️ Including tags in Git origin push"
+        fi
+
+        if [[ "${{ inputs.force }}" == "true" ]]; then
+          PUSH_ARGS="$PUSH_ARGS --force"
+          echo "🔥 Forcing push to Git origin"
+        fi
+
+        if git push git-origin $PUSH_ARGS; then
+          echo "✅ Successfully pushed to Git origin"
+        else
+          echo "❌ Failed to push to Git origin"
+          echo "::warning::Push to Git origin failed, but GitHub push succeeded"
+          exit 1
+        fi

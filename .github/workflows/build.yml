@@ -1,0 +1,240 @@
+# yaml-language-server: $schema=https://json-schema.org/draft-07/schema#
+name: _build
+
+concurrency:
+  group: build
+  cancel-in-progress: false
+
+on:
+  workflow_call:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      should-build: ${{ steps.check.outputs.should-build }}
+      artifact-run-id: ${{ steps.check.outputs.artifact-run-id }}
+      artifact-id: ${{ steps.check.outputs.artifact-id }}
+      build-sha: ${{ steps.check.outputs.build-sha }}
+      repo-name: ${{ steps.meta.outputs.repo-name }}
+      repo-path: ${{ steps.meta.outputs.repo-path }}
+      image-tar: ${{ steps.check.outputs.image-tar }}
+      prod: ${{ steps.meta.outputs.prod }}
+      tag: ${{ steps.check.outputs.tag }}
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine build metadata
+        id: meta
+        uses: ./.github/actions/determine-build-metadata
+        with:
+          repository: ${{ github.repository }}
+          github-ref: ${{ github.ref }}
+
+      - name: Check if build/deploy needed
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu -o pipefail
+
+          SHOULD_BUILD=false
+          SHOULD_DEPLOY=false
+
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+          IMAGE_TAR="${{ steps.meta.outputs.repo-name }}-${{github.sha}}.tar"
+          VERSION="$(git tag --points-at ${{ github.sha }})"
+          IS_VERSION_TAGGED="$([[ "$VERSION" =~ ^v ]] && echo "true" || echo "false")"
+          BRANCH_NAME="$([[ "${{ github.ref }}" =~ ^refs/tags/v ]] && echo "main" || echo "${{ github.ref }}" | sed 's/refs\/heads\///')"
+          COMMIT_MESSAGE="$(git log --format=%s -n 1 ${{ github.sha }})"
+          if [[ "${{ steps.meta.outputs.prod }}" == "true" ]]; then
+            TAG="${{ steps.meta.outputs.repo-name }}:sha-${SHORT_SHA},${{ steps.meta.outputs.repo-name }}:latest"
+          else
+            TAG="${{ steps.meta.outputs.repo-name }}-dev:sha-${SHORT_SHA}"
+          fi
+
+          if [[ "$BRANCH_NAME" == "staging" ]]; then
+            echo "🔨 Build is on staging - will also deploy to staging"
+            SHOULD_DEPLOY="true"
+          elif [[ "$BRANCH_NAME" == "main" ]]; then
+            if [[ ! "$COMMIT_MESSAGE" =~ ^chore:\ Release ]] || [[ "$IS_VERSION_TAGGED" == "false" ]]; then
+              echo "❌ Skipping build for main: $COMMIT_MESSAGE. Not a version release. Missing tag or proper commit message for release."
+              exit 1
+            fi
+            echo "🏷️ Version tagged build on main: $VERSION - will also deploy to production"
+            SHOULD_DEPLOY="true"
+          fi
+
+          echo "🔍 Checking for in progress builds with git SHA ${{github.sha}}"
+          IN_PROGRESS_BUILDS=""
+          if ! IN_PROGRESS_BUILDS=$(gh api repos/${{github.repository}}/actions/runs --jq '.workflow_runs[] | select(.head_sha == "${{github.sha}}" and .status == "in_progress" and .name == "Build/Deploy" and .id != ${{ github.run_id }}) | .id' 2>/dev/null); then
+            echo "❌ Failed to check for in-progress builds via GitHub API"
+            echo "::error::GitHub API call failed while checking for in-progress builds"
+            exit 1
+          fi
+          IN_PROGRESS_BUILDS=$(echo "$IN_PROGRESS_BUILDS" | head -1)
+
+          if [[ -n "$IN_PROGRESS_BUILDS" ]]; then
+            echo "❌ Found in-progress build for SHA ${{github.sha}}: $IN_PROGRESS_BUILDS - wait for existing build to complete before triggering a new one or rerunning this workflow"
+            exit 1
+          fi
+
+          echo "🔍 Checking for existing build artifacts with git SHA ${{github.sha}}"
+
+          # Check for existing artifacts with this SHA across all workflow runs
+          ARTIFACT_INFO=""
+          if ! ARTIFACT_INFO=$(gh api repos/${{github.repository}}/actions/artifacts --jq '.artifacts[] | select(.name | endswith("-${{github.sha}}.tar")) | {id, name, workflow_run} | @json' 2>/dev/null); then
+            echo "❌ Failed to check for existing artifacts via GitHub API"
+            echo "::error::GitHub API call failed while checking for existing artifacts"
+            exit 1
+          fi
+          ARTIFACT_INFO=$(echo "$ARTIFACT_INFO" | head -1)
+
+          if [[ -n "$ARTIFACT_INFO" ]]; then
+            ARTIFACT_ID=$(echo "$ARTIFACT_INFO" | jq -r '.id')
+            ARTIFACT_NAME=$(echo "$ARTIFACT_INFO" | jq -r '.name')
+            RUN_ID=$(echo "$ARTIFACT_INFO" | jq -r '.workflow_run.id')
+            
+            echo "✅ Found existing artifact $ARTIFACT_NAME from run: $RUN_ID"
+            echo "artifact-id=$ARTIFACT_ID" >> $GITHUB_OUTPUT
+            echo "artifact-id -> $ARTIFACT_ID"
+          else
+            RUN_ID="${{ github.run_id }}"
+            SHOULD_BUILD="true"
+            echo "🔨 No existing build artifact found; will build..."
+          fi
+
+          echo "should-build=$SHOULD_BUILD" >> $GITHUB_OUTPUT
+          echo "should-build -> $SHOULD_BUILD"
+          echo "should-deploy=$SHOULD_DEPLOY" >> $GITHUB_OUTPUT
+          echo "should-deploy -> $SHOULD_DEPLOY"
+          echo "artifact-run-id=$RUN_ID" >> $GITHUB_OUTPUT
+          echo "artifact-run-id -> $RUN_ID"
+          echo "build-sha=${{github.sha}}" >> $GITHUB_OUTPUT
+          echo "build-sha -> ${{github.sha}}"
+          echo "image-tar=$IMAGE_TAR" >> $GITHUB_OUTPUT
+          echo "image-tar -> $IMAGE_TAR"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "tag -> $TAG"
+
+  build:
+    needs: check
+    if: ${{ needs.check.outputs.should-build == 'true' }}
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.upload-artifact.outputs.artifact-id }}
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure scripts are executable
+        run: chmod +x deploy/scripts/*.sh
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate cache keys
+        id: cache-keys
+        run: |
+          # Generate cache key based on package-lock.json for dependencies
+          DEPS_HASH=$(sha256sum package-lock.json | cut -d' ' -f1 | cut -c1-8)
+          echo "deps-hash=${DEPS_HASH}" >> $GITHUB_OUTPUT
+          echo "deps-hash -> $DEPS_HASH"
+
+          # Generate cache key based on source files and paths
+          SOURCE_PATHS="app/ server/ public/ nuxt.config.ts tsconfig.json tailwind.config.js package.json"
+          SRC_HASH=$(find $SOURCE_PATHS -type f 2>/dev/null -exec sha256sum {} + | sha256sum | cut -d' ' -f1 | cut -c1-8 || echo "fallback-$(date +%s)")
+          echo "src-hash=${SRC_HASH}" >> $GITHUB_OUTPUT
+          echo "src-hash -> $SRC_HASH"
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-deps-${{ steps.cache-keys.outputs.deps-hash }}-src-${{ steps.cache-keys.outputs.src-hash }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-deps-${{ steps.cache-keys.outputs.deps-hash }}-src-${{ steps.cache-keys.outputs.src-hash }}-
+            ${{ runner.os }}-buildx-deps-${{ steps.cache-keys.outputs.deps-hash }}-
+            ${{ runner.os }}-buildx-
+
+      - name: Extract version for Docker build
+        id: extract_version
+        run: |
+          if [[ "${{ github.ref }}" =~ ^refs/tags/v([0-9]+\.[0-9]+\.[0-9]+)(-.*)?$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            if [[ -n "${BASH_REMATCH[2]}" ]]; then
+              VERSION="${VERSION}${BASH_REMATCH[2]}"
+            fi
+            echo "🏷️ Using git tag version: ${VERSION}"
+          else
+            VERSION=$(node -p "require('./package.json').version || '0.0.0'")
+            SHA="${{ github.sha }}"
+            GIT_SHA_SHORT="${SHA:0:7}"
+            VERSION="${VERSION}+${GIT_SHA_SHORT}"
+            echo "📦 Using package.json + SHA version: ${VERSION}"
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - name: Build container
+        uses: docker/build-push-action@v6
+        with:
+          outputs: type=docker,dest=${{ runner.temp }}/${{ needs.check.outputs.image-tar }}
+          tags: ${{ needs.check.outputs.tag }}
+          build-args: |
+            VERSION=${{ env.VERSION }}
+          context: .
+          target: runtime
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          platforms: linux/amd64
+
+      - name: Rotate cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Upload container as artifact
+        id: upload-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.check.outputs.image-tar }}
+          path: ${{ runner.temp }}/${{ needs.check.outputs.image-tar }}
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
+
+      - name: Notify successful build
+        run: |
+          echo "🎉 Build completed successfully!"
+          echo "📋 Summary:"
+          echo "  - Source: ${{ github.ref }}"
+          echo "  - Status: ✅ Build Successful"
+          echo "  - Next: Stage this build manually or wait for the next scheduled staging."
+
+  deploy:
+    needs: [check, build]
+    if: ${{ always() && needs.check.outputs.should-deploy == 'true' }}
+    permissions:
+      actions: read
+      contents: read
+    uses: ./.github/workflows/deploy.yml
+    with:
+      artifact-run-id: ${{ needs.check.outputs.artifact-run-id }}
+      artifact-id: ${{ needs.check.outputs.should-build == 'true' && needs.build.outputs.artifact-id || needs.check.outputs.artifact-id }}
+      build-sha: ${{ needs.check.outputs.build-sha }}
+      repo-name: ${{ needs.check.outputs.repo-name }}
+      repo-path: ${{ needs.check.outputs.repo-path }}
+      image-tar: ${{ needs.check.outputs.image-tar }}
+      prod: ${{ needs.check.outputs.prod == 'true' }}
+      tag: ${{ needs.check.outputs.tag }}
+    secrets: inherit

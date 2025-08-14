@@ -1,0 +1,37 @@
+name: Release
+
+permissions:
+  actions: read
+  contents: write
+  issues: write
+  pull-requests: write
+
+on:
+  schedule:
+    # Run weekly on Mondays 12:00 UTC/04:00 PST (UTC-08)
+    - cron: "0 12 * * 1"
+  workflow_dispatch:
+    inputs:
+      force_release:
+        description: "Force release even if validation fails"
+        required: false
+        default: false
+        type: boolean
+      note_for_dispatch:
+        description: "Note: This workflow will always call release.yml@staging, but it MUST BE RUN FROM THE MAIN BRANCH to ensure environment consistency."
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  call-release-workflow:
+    permissions:
+      actions: read
+      contents: write
+      issues: write
+      pull-requests: write
+    uses: badbl0cks/portfolio/.github/workflows/release.yml@staging
+    if: github.ref == 'refs/heads/main'
+    with:
+      force_release: ${{ inputs.force_release || false }}
+    secrets: inherit
