@@ -32,15 +32,5 @@ export default defineNuxtConfig({
   },
   nitro: {
     preset: "node-server",
-    publicAssets: [
-      {
-        baseURL: "/",
-        dir: "public",
-      },
-      {
-        baseURL: "/static-assets",
-        dir: "static-assets",
-      },
-    ],
   },
 });

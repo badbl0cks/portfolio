@@ -17,7 +17,6 @@ logs
 .DS_Store
 .fleet
 .idea
-public/headshot_pp.png
 .secrets
 
 # Local env files
