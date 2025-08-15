@@ -1,3 +1,13 @@
+## [1.0.1](https://ssh.git.badblocks.dev/badbl0cks/portfolio/compare/v1.0.0...v1.0.1) (2025-08-15)
+
+### CI/CD
+
+* don't hide or ignore any commit types, at least bump the patch version if ([185dc5f](https://ssh.git.badblocks.dev/badbl0cks/portfolio/commit/185dc5f66267d5ab8446ab51e03f051a4210e0b3))
+
+### Chores
+
+* merge staging changes for next release ([cea509a](https://ssh.git.badblocks.dev/badbl0cks/portfolio/commit/cea509a0cee89047e9b261c87906cd05349ca1fd))
+
 ## 1.0.0 (2025-08-15)
 
 ### New Features
