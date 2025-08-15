@@ -18,6 +18,9 @@
         >
           Source Code
         </button>
+        <button v-else class="btn btn-secondary btn-disabled">
+          Source Code (on the way!)
+        </button>
       </div>
     </div>
   </div>
