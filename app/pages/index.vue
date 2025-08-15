@@ -8,7 +8,9 @@
             Hi, I'm <span class="text-primary">Rob</span>!
           </h1>
           <p class="py-6 text-2xl">I'm <span id="typed-text" /></p>
-          <button class="btn btn-primary">View My Work</button>
+          <a href="#projects"
+            ><button class="btn btn-primary">View My Work</button></a
+          >
         </div>
       </div>
     </section>
@@ -30,7 +32,7 @@
           </div>
           <div class="md:w-2/3">
             <p class="text-lg mb-4">
-              Hiya! I'm a passionate and creative web developer with a knack for
+              Hi! I'm a passionate and creative web developer with a knack for
               building beautiful and functional websites. I love learning new
               technologies and I'm always looking for exciting projects to work
               on.
@@ -52,34 +54,44 @@
     </section>
     <section id="projects" class="py-20 bg-base-200">
       <div class="container mx-auto px-4">
-        <h2 class="text-4xl font-bold text-center mb-12">Current Projects</h2>
+        <h2 class="text-4xl font-bold text-center mb-12">Works in Progress</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <ProjectCard
             title="PKMNTradeClub"
-            description="A web app to facilitate trading between players of Pokémon TCG Pocket, which frustratingly lacks trade matching features. Currently in development!"
+            description="A project started to learn and practice Django while facilitating trading between players of Pokémon TCG Pocket, which frustratingly lacks trade matching features."
+            source-code-link="https://git.badblocks.dev/badbl0cks/pkmntrade.club"
+          />
+          <ProjectCard
+            title="This Portfolio Site!"
+            description="A portfolio site built to explore and learn Nuxt.js while showcasing my projects and skills."
+            source-code-link="https://git.badblocks.dev/badbl0cks/portfolio"
           />
           <ProjectCard
             title="Home Lab & Self-Hosted Solutions"
-            description="A collection of hardware, projects, and experiments to learn and explore new technologies and concepts, as well as augment and enhance my personal tech space."
+            description="A collection of hardware, software projects, and experiments to learn and explore new technologies and concepts, as well as augment and enhance my personal tech space."
           />
         </div>
       </div>
     </section>
     <section id="projects" class="py-20 bg-base-200">
       <div class="container mx-auto px-4">
-        <h2 class="text-4xl font-bold text-center mb-12">Past Projects</h2>
+        <h2 class="text-4xl font-bold text-center mb-12">
+          Neat Things I've Done
+        </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <ProjectCard
             title="PokeEmerald Mods"
             description="Various mods for one of my favorite games, Pokémon Emerald, to streamline my replays with custom QoL features."
-          />
-          <ProjectCard
-            title="EditMii"
-            description="A Python script that allows users to view their WiiU Mii character's data and optionally change the Mii's name. Created in order to easily set flashy, custom names for online play."
+            source-code-link="https://git.badblocks.dev/badbl0cks/pokeemerald"
           />
           <ProjectCard
             title="BOTW Completer"
             description="A Nintendo Switch application that helps users find missing items and locations in Breath of the Wild by modifying the save file to add stamps to the in-game map."
+            source-code-link="https://git.badblocks.dev/badbl0cks/botw-completer"
+          />
+          <ProjectCard
+            title="EditMii"
+            description="An app that allows users to view their WiiU Mii character's data and optionally change the Mii's name. Created in order to easily set flashy, custom names for online play."
           />
         </div>
       </div>
@@ -102,8 +114,8 @@ onMounted(() => {
   const { $sr } = useNuxtApp();
   const typedOptions = {
     strings: [
-      "an aspiring Software Engineer.",
       "a self-taught Web Developer with experience.",
+      "a Bachelor's degree holder in Software Engineering.",
       "a Full-Stack Magician.",
       "a UI/UX Problem Solver.",
       "a Web Accessibility Advocate.",
