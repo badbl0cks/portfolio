@@ -1,3 +1,21 @@
+## [1.1.0](https://ssh.git.badblocks.dev/badbl0cks/portfolio/compare/v1.0.1...v1.1.0) (2025-08-15)
+
+### New Features
+
+* allow project card to show on-the-way button for projects not yet uploaded ([d2e0fbd](https://ssh.git.badblocks.dev/badbl0cks/portfolio/commit/d2e0fbdd737b42182af9b54adc77310749ccf794))
+
+### Bug Fixes
+
+* add <a href="[#projects](https://ssh.git.badblocks.dev/badbl0cks/portfolio/issues/projects)"> around the View My Work button. update wording on ([6fd9f47](https://ssh.git.badblocks.dev/badbl0cks/portfolio/commit/6fd9f4732566bf9366cd05a7abf4310dea3fbe16))
+
+### Refactor
+
+* change button text to be more clear ([ed6188b](https://ssh.git.badblocks.dev/badbl0cks/portfolio/commit/ed6188bc759cbf0ab4c1f2ad5a548d8ea31dd7a5))
+
+### Chores
+
+* merge staging changes for next release ([48f5e7b](https://ssh.git.badblocks.dev/badbl0cks/portfolio/commit/48f5e7b46c1e1a318d1eca26ab1d9365d1acdbcc))
+
 ## [1.0.1](https://ssh.git.badblocks.dev/badbl0cks/portfolio/compare/v1.0.0...v1.0.1) (2025-08-15)
 
 ### CI/CD
