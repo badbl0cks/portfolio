@@ -1,6 +1,6 @@
 # 🚀 Portfolio Bonanza
 
-A spicy little portfolio site with some absolutely ridiculous SMS shenanigans built on Nuxt 4! Looks like things are getting too spicy for the pepper! 🌶️ 
+A sweet little portfolio site with some absolutely ridiculous SMS shenanigans built on Nuxt 4! Looks like things are getting too spicy for the pepper! 🌶️ 
 
 ## ✨ The Good Stuff
 
